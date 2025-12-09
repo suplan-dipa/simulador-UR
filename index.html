@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Unidades de Regeneração OUS Bairros do Centro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom styles for transitions */
+        .help-text {
+            transition: all 0.3s ease-in-out;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .help-text.open {
+            max-height: 200px; /* Arbitrary large height */
+            opacity: 1;
+            margin-top: 0.5rem;
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #374151;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            ring: 2px;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-blue-900 mb-2">Simulador de Unidades de Regeneração</h1>
+            <h2 class="text-xl text-blue-700">OUS Bairros do Centro (PL 574/2025)</h2>
+        </header>
+
+        <!-- Disclaimer -->
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded shadow-sm" role="alert">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-800 font-medium">
+                        Atenção, por se tratar de um projeto de lei, sua redação está sujeita a alterações ao longo de sua tramitação. Este simulador reflete a proposta enviada pelo Executivo.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form Card -->
+        <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+            
+            <form id="simuladorForm" onsubmit="event.preventDefault();">
+                
+                <!-- Section 1: Inputs Básicos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- ATE -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="ate">ATE (Área Total Edificada) m²</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-ate')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="number" id="ate" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2 transition-colors" placeholder="0,00" oninput="calculate()">
+                        <div id="help-ate" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Área Total Edificada, que é toda a área construída de uma edificação, medida externamente (área bruta).
+                        </div>
+                    </div>
+
+                    <!-- AT -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="at">AT (Área do terreno) m²</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-at')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="number" id="at" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2 transition-colors" placeholder="0,00" oninput="calculate()">
+                        <div id="help-at" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Corresponde a área do lote ou do conjunto de lotes somadas.
+                        </div>
+                    </div>
+
+                    <!-- ITBI -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="itbi">ITBI (Valor por m² de Terreno) R$</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-itbi')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="number" id="itbi" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2 transition-colors" placeholder="0,00" oninput="calculate()">
+                        <div id="help-itbi" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Corresponde ao valor por m² de terreno aplicável para apuração de ITBI.
+                        </div>
+                    </div>
+
+                    <!-- CAmax -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="camax">CAmax ou CAcent</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-camax')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="number" id="camax" step="0.01" min="0" class="w-full border border-gray-300 rounded px-3 py-2 transition-colors" placeholder="0,00" oninput="calculate()">
+                        <div id="help-camax" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Corresponde ao coeficiente máximo em conformidade com a Lei 11.181/2019.
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="border-gray-200 my-6">
+
+                <!-- Section 2: Cálculos Intermediários -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- Área Líquida -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="area_liquida" class="text-blue-800">Área Líquida</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-al')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="text" id="area_liquida" class="w-full bg-blue-50 border border-blue-200 text-blue-900 font-bold rounded px-3 py-2" readonly placeholder="0,00">
+                        <div id="help-al" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Área líquida calculada conforme a fórmula IV.1.1 do projeto de Lei 574/2025 (ATE / 1.7).
+                        </div>
+                    </div>
+
+                    <!-- Coeficiente Praticado -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="coef_praticado" class="text-blue-800">Coeficiente de aproveitamento praticado</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-cp')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="text" id="coef_praticado" class="w-full bg-blue-50 border border-blue-200 text-blue-900 font-bold rounded px-3 py-2" readonly placeholder="0,00">
+                        <div id="error-msg" class="hidden mt-2 text-sm text-red-600 font-semibold bg-red-50 p-2 rounded border border-red-200">
+                            <i class="fas fa-ban mr-1"></i> Erro: Este coeficiente excede o limite permitido (CAmax + 70%).
+                        </div>
+                        <div id="help-cp" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Coeficiente calculado conforme inciso I do Art 8º do projeto de Lei 574/2025 (Área Líquida / Área do Terreno).
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="border-gray-200 my-6">
+
+                <!-- Section 3: Fatores de Regeneração -->
+                <div class="mb-6">
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="opcao_incentivada">Empreendimento incentivado</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-incentivo')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <select id="opcao_incentivada" class="w-full border border-gray-300 rounded px-3 py-2 bg-white" onchange="calculate()">
+                            <option value="0" disabled selected>Selecione uma opção...</option>
+                            <option value="1">1 - Retrofit, conforme regulamento</option>
+                            <option value="2">2 - EHIS, atendido o art. 169 da Lei n° 11.181, de 2019</option>
+                            <option value="3">3 - Finalização ou substituição de obras abandonadas</option>
+                            <option value="4">4 - Substituição de estacionamento em funcionamento quando da publicação desta Lei, caracterizado como imóvel subutilizado (art. 41, II da Lei n° 11.181, de 2019) </option>
+                            <option value="5">5 - Substituição de galpões, conforme regulamento</option>
+                            <option value="6">6 - Edificações nas porções dos bairros Carlos Prates, Bonfim, Lagoinha, Colégio Batista, Floresta e Concórdia, situadas na Subárea 1B do Anexo I</option>
+                        </select>
+                        <div id="help-incentivo" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Caso incida mais de um Fator de Regeneração a um mesmo empreendimento incentivado, aplica-se apenas o mais elevado.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <!-- Fator de Regeneração -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="fator_regeneracao" class="text-gray-700">Fator de Regeneração</label>
+                        </div>
+                        <input type="text" id="fator_regeneracao" class="w-full bg-gray-100 border border-gray-300 text-gray-600 rounded px-3 py-2" readonly placeholder="0,0">
+                    </div>
+
+                    <!-- Área Autoaplicada -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="area_autoaplicada" class="text-gray-700">Área Autoaplicada (AAp)</label>
+                            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="toggleHelp('help-aap')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="text" id="area_autoaplicada" class="w-full bg-gray-100 border border-gray-300 text-gray-600 rounded px-3 py-2" readonly placeholder="0,00">
+                        <div id="help-aap" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
+                            Parcela de AL obrigatória de ser descontada do empreendimento incentivado gerador, a partir de quando exceder o CAmax ou o CAcent até o limite disposto na alínea b do inciso III do art. 8°, sem gerar UR.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Resultados Finais (Gerador) -->
+                <div class="bg-blue-900 text-white p-6 rounded-lg mb-8">
+                    <h3 class="text-lg font-bold mb-4 border-b border-blue-700 pb-2">Resultados Geração de UR</h3>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- AGT -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="agt" class="font-medium text-blue-100">Área Gerada Transferível (AGT)</label>
+                                <button type="button" class="text-blue-300 hover:text-white" onclick="toggleHelp('help-agt')">
+                                    <i class="fas fa-question-circle"></i>
+                                </button>
+                            </div>
+                            <div class="text-3xl font-bold" id="agt_display">0,00</div>
+                            <input type="hidden" id="agt">
+                            <div id="help-agt" class="help-text text-xs text-blue-200 mt-1">
+                                Parcela transferível de AL, após ser deduzida a AAp, a ser modulada pelo FR, sendo referência para a geração de UR.
+                            </div>
+                        </div>
+
+                        <!-- UR -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label for="ur" class="font-medium text-yellow-300">Unidade de Regeneração (UR)</label>
+                                <button type="button" class="text-blue-300 hover:text-white" onclick="toggleHelp('help-ur')">
+                                    <i class="fas fa-question-circle"></i>
+                                </button>
+                            </div>
+                            <div class="text-3xl font-bold text-yellow-400" id="ur_display">0,00</div>
+                            <input type="hidden" id="ur">
+                            <div id="help-ur" class="help-text text-xs text-blue-200 mt-1">
+                                Converte a AGT em um valor padronizado, considerando o ITBI do terreno gerador e a escala de mil reais por m², conforme a fórmula UR.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+
+        <!-- Section 5: Recebimento das UR's -->
+        <div class="bg-green-50 border border-green-200 rounded-xl shadow-lg p-6 md:p-8">
+            <h3 class="text-xl font-bold text-green-900 mb-6 flex items-center">
+                <i class="fas fa-hand-holding-dollar mr-2"></i> Recebimento das UR's
+            </h3>
+            
+            <form onsubmit="event.preventDefault();">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    
+                    <!-- ITBI Receptor -->
+                    <div class="input-group">
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="itbi_receptor">ITBI (Valor por m² - Receptor)</label>
+                            <button type="button" class="text-green-600 hover:text-green-800" onclick="toggleHelp('help-itbi-rec')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <input type="number" id="itbi_receptor" step="0.01" min="0" class="w-full border border-green-300 rounded px-3 py-2 transition-colors focus:border-green-500 focus:ring-green-500" placeholder="0,00" oninput="calculate()">
+                        <div id="help-itbi-rec" class="help-text text-sm text-gray-600 bg-white p-2 rounded border border-green-100">
+                            Corresponde ao valor por m² de terreno aplicável para apuração de ITBI.
+                        </div>
+                    </div>
+
+                    <!-- AER -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label for="aer" class="font-bold text-green-900">Área Equivalente no Receptor (AER)</label>
+                            <button type="button" class="text-green-600 hover:text-green-800" onclick="toggleHelp('help-aer')">
+                                <i class="fas fa-question-circle text-lg"></i>
+                            </button>
+                        </div>
+                        <div class="text-3xl font-bold text-green-700 bg-white border border-green-200 rounded px-3 py-2" id="aer_display">0,00</div>
+                        <div id="help-aer" class="help-text text-sm text-gray-600 bg-white p-2 rounded border border-green-100">
+                            Área líquida efetivamente recebida, convertendo as URs de acordo com o ITBI do terreno receptor.
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+        
+        <footer class="mt-8 text-center text-gray-500 text-sm">
+            <p>&copy; 2025 Simulador UR.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Variáveis globais para armazenar valores com precisão
+        let calcState = {
+            ate: 0,
+            at: 0,
+            itbiGerador: 0,
+            camax: 0,
+            opcao: "0",
+            itbiReceptor: 0,
+            // Resultados
+            areaLiquida: 0,
+            coefPraticado: 0,
+            fator: 0,
+            aap: 0,
+            agt: 0,
+            ur: 0,
+            aer: 0
+        };
+
+        // Função para formatar números no padrão brasileiro
+        const formatNumber = (num) => {
+            if (isNaN(num) || !isFinite(num)) return "0,00";
+            return num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // Função para alternar a visibilidade dos textos de ajuda
+        const toggleHelp = (id) => {
+            const el = document.getElementById(id);
+            el.classList.toggle('open');
+        };
+
+        // Função Principal de Cálculo
+        const calculate = () => {
+            // 1. Obter valores de entrada
+            calcState.ate = parseFloat(document.getElementById('ate').value) || 0;
+            calcState.at = parseFloat(document.getElementById('at').value) || 0;
+            calcState.itbiGerador = parseFloat(document.getElementById('itbi').value) || 0;
+            calcState.camax = parseFloat(document.getElementById('camax').value) || 0;
+            calcState.opcao = document.getElementById('opcao_incentivada').value;
+            calcState.itbiReceptor = parseFloat(document.getElementById('itbi_receptor').value) || 0;
+
+            // 2. Área Líquida
+            // ATE / 1.7
+            calcState.areaLiquida = calcState.ate / 1.7;
+            document.getElementById('area_liquida').value = formatNumber(calcState.areaLiquida);
+
+            // 3. Coeficiente de aproveitamento praticado
+            // Área Líquida / AT
+            calcState.coefPraticado = 0;
+            if (calcState.at > 0) {
+                calcState.coefPraticado = calcState.areaLiquida / calcState.at;
+            }
+            document.getElementById('coef_praticado').value = formatNumber(calcState.coefPraticado);
+
+            // 4. Validação do Coeficiente (Limite de 70% acima do CAmax)
+            const limiteCoeficiente = calcState.camax * 1.7;
+            const errorMsg = document.getElementById('error-msg');
+            const coefInput = document.getElementById('coef_praticado');
+            
+            if (calcState.camax > 0 && calcState.at > 0 && calcState.coefPraticado > limiteCoeficiente + 0.00000000001) {
+                errorMsg.classList.remove('hidden');
+                coefInput.classList.add('border-red-500', 'bg-red-50', 'text-red-900');
+                coefInput.classList.remove('bg-blue-50', 'text-blue-900', 'border-blue-200');
+            } else {
+                errorMsg.classList.add('hidden');
+                coefInput.classList.remove('border-red-500', 'bg-red-50', 'text-red-900');
+                coefInput.classList.add('bg-blue-50', 'text-blue-900', 'border-blue-200');
+            }
+
+            // 5. Fator de Regeneração
+            let fatorTemp = 0;
+            if (calcState.opcao === "1" || calcState.opcao === "2") {
+                fatorTemp = 1.5;
+            } else if (calcState.opcao === "6") {
+                fatorTemp = 0.3;
+            } else if (calcState.opcao !== "0") {
+                fatorTemp = 0.5;
+            }
+            calcState.fator = fatorTemp;
+            document.getElementById('fator_regeneracao').value = calcState.fator > 0 ? calcState.fator.toLocaleString('pt-BR', { minimumFractionDigits: 1 }) : "0,0";
+
+            // 6. Área Autoaplicada (AAp)
+            calcState.aap = 0;
+            if (calcState.coefPraticado > calcState.camax && calcState.at > 0) {
+                calcState.aap = (calcState.coefPraticado - calcState.camax) * calcState.at;
+            }
+            document.getElementById('area_autoaplicada').value = formatNumber(calcState.aap);
+
+            // 7. Área Gerada Transferível (AGT)
+            calcState.agt = 0;
+            if (calcState.fator > 0) {
+                calcState.agt = (calcState.areaLiquida - calcState.aap) * calcState.fator;
+            }
+            calcState.agt = Math.max(0, calcState.agt);
+            document.getElementById('agt_display').textContent = formatNumber(calcState.agt);
+
+            // 8. Unidade de Regeneração (UR)
+            calcState.ur = 0;
+            if (calcState.itbiGerador > 0) {
+                calcState.ur = calcState.agt * (calcState.itbiGerador / 1000);
+            }
+            document.getElementById('ur_display').textContent = formatNumber(calcState.ur);
+
+            // 9. Área Equivalente no Receptor (AER) - Novo Cálculo
+            // Fórmula: UR / (ITBI do receptor / 1000)
+            calcState.aer = 0;
+            if (calcState.itbiReceptor > 0 && calcState.ur > 0) {
+                calcState.aer = calcState.ur / (calcState.itbiReceptor / 1000);
+            }
+            document.getElementById('aer_display').textContent = formatNumber(calcState.aer);
+        };
+    </script>
+</body>
+</html>
