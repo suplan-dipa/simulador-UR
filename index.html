@@ -51,12 +51,23 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-yellow-800 font-medium">
+                        Simulador atualizado conforme emenda substitutiva 34/2026
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded shadow-sm" role="alert">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-yellow-800 font-medium">
                         Atenção, por se tratar de um projeto de lei, sua redação está sujeita a alterações ao longo de sua tramitação. Este simulador reflete a proposta enviada pelo Executivo.
                     </p>
                 </div>
             </div>
         </div>
-
         <!-- Main Form Card -->
         <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
             
@@ -180,6 +191,7 @@
                             <option value="4">4 - Substituição de estacionamento em funcionamento quando da publicação desta Lei, caracterizado como imóvel subutilizado (art. 41, II da Lei n° 11.181, de 2019) </option>
                             <option value="5">5 - Substituição de galpões, conforme regulamento</option>
                             <option value="6">6 - Edificações nas porções dos bairros Carlos Prates, Bonfim, Lagoinha, Colégio Batista, Floresta e Concórdia, situadas na Subárea 1B do Anexo I</option>
+			    <option value="7">7 - Substituição de edificação horizontal, nos termos do Anexo Xl da Lei  11.181 2019, com características de abandono e degradação, conforme regulamento</option>
                         </select>
                         <div id="help-incentivo" class="help-text text-sm text-gray-600 bg-gray-100 p-2 rounded">
                             Caso incida mais de um Fator de Regeneração a um mesmo empreendimento incentivado, aplica-se apenas o mais elevado.
@@ -370,7 +382,7 @@
             // 5. Fator de Regeneração
             let fatorTemp = 0;
             if (calcState.opcao === "1" || calcState.opcao === "2") {
-                fatorTemp = 1.5;
+                fatorTemp = 1;
             } else if (calcState.opcao === "6") {
                 fatorTemp = 0.6;
             } else if (calcState.opcao !== "0") {
