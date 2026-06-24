@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Viabilidade & Envelope — OUS Somos Centro</title>
+<style>
+  :root{
+    --bg:#0d1117; --panel:#131b24; --panel2:#192230; --line:#243347;
+    --ink:#d8e6f0; --mut:#7a9ab8; --accent:#38bdf8; --accent2:#34d399;
+    --warn:#fbbf24; --bad:#f87171; --good:#34d399;
+    --inputbg:#0a1018; --card:#162030;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+  header{background:linear-gradient(90deg,#0f2137,#14344f);padding:10px 18px;display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line)}
+  header h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.3px}
+  header .sub{font-size:11px;color:#90c4dd;font-weight:400}
+  .wrap{display:grid;grid-template-columns:330px 1fr;gap:0;height:calc(100vh - 47px)}
+  .left{background:var(--panel);overflow-y:auto;padding:10px 12px;border-right:1px solid var(--line)}
+  .right{overflow-y:auto;padding:12px 14px;background:var(--bg)}
+  .sec{margin-bottom:10px;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel2)}
+  .sec>h3{margin:0;padding:7px 10px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;background:#212c46;color:#bcd0ff;cursor:pointer;display:flex;justify-content:space-between}
+  .sec .body{padding:8px 10px}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:5px 0;gap:8px}
+  .row label{color:var(--mut);flex:1;font-size:12px}
+  .row input,.row select{background:var(--inputbg);color:var(--ink);border:1px solid var(--line);border-radius:5px;padding:4px 6px;font-size:12px;width:108px;text-align:right}
+  .row select{text-align:left;width:150px}
+  .row input:focus,.row select:focus{outline:none;border-color:var(--accent)}
+  .row.calc input{color:var(--accent2);background:#0c1626;border-color:#1d3a44;font-weight:600}
+  .hint{font-size:10.5px;color:#6f7ea3;margin:2px 0 6px}
+  /* right */
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:12px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:9px;padding:9px 10px}
+  .kpi .t{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px}
+  .kpi .v{font-size:18px;font-weight:700;margin-top:3px;color:#dfe8ff}
+  .kpi .v.small{font-size:15px}
+  .kpi.good .v{color:var(--good)} .kpi.warn .v{color:var(--warn)} .kpi.bad .v{color:var(--bad)}
+  .grid2{display:grid;grid-template-columns:1.35fr .95fr;gap:12px;min-height:0}
+  .viz{background:#080d14;border:1px solid var(--line);border-radius:10px;padding:8px;position:relative;display:flex;flex-direction:column}
+  .viz canvas{width:100%;flex:1;min-height:0;display:block;border-radius:6px;cursor:grab}
+  .viz .ctrls{position:absolute;top:12px;right:12px;display:flex;gap:6px;align-items:center;background:#0008;padding:4px 7px;border-radius:6px}
+  .viz .ctrls input[type=range]{width:90px}
+  .viz .leg{position:absolute;left:12px;bottom:10px;font-size:10.5px;color:#9fb0d6;background:#0009;padding:5px 8px;border-radius:6px;line-height:1.5}
+  .panelR{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-y:auto}
+  .panelR h3{margin:0 0 7px;font-size:12px;color:#bcd0ff;text-transform:uppercase;letter-spacing:.5px}
+  table.fin{width:100%;border-collapse:collapse;font-size:12px}
+  table.fin td{padding:3px 4px;border-bottom:1px solid #1f293f}
+  table.fin td.v{text-align:right;font-variant-numeric:tabular-nums}
+  table.fin tr.sub td{color:var(--mut);font-size:11px}
+  table.fin tr.tot td{font-weight:700;border-top:1px solid var(--line)}
+  table.fin tr.res.good td{font-weight:700;color:var(--good)}
+  table.fin tr.res.warn td{font-weight:700;color:var(--warn)}
+  table.fin tr.res.bad  td{font-weight:700;color:var(--bad)}
+  table.fin tr.head td{color:#bcd0ff;font-weight:700;padding-top:8px;text-transform:uppercase;font-size:10.5px;letter-spacing:.4px}
+  .badge{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10.5px;font-weight:600}
+  .badge.ca{background:#0e2a22;color:#34d399} .badge.geo{background:#2a230c;color:#fbbf24}
+  .floors{margin-top:10px;max-height:150px;overflow:auto;font-size:11px}
+  .floors table{width:100%;border-collapse:collapse}
+  .floors th,.floors td{padding:2px 5px;text-align:right;border-bottom:1px solid #1f293f}
+  .floors th{color:var(--mut);font-weight:600;position:sticky;top:0;background:var(--panel2)}
+  /* modo Lei x OUS */
+  .modeSel{display:flex;margin:2px 0 11px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+  .modeSel .mode{flex:1;background:var(--inputbg);color:var(--mut);border:none;padding:9px 6px;font-size:12px;cursor:pointer;font-weight:700;letter-spacing:.2px}
+  .modeSel .mode.active{background:linear-gradient(90deg,#0f3a5c,#176ea3);color:#e8f4fb}
+  .modeSel .mode:not(.active):hover{background:#162038}
+  /* botão info */
+  .infoBtn{margin-left:auto;background:#ffffff1f;border:1px solid #ffffff3a;color:#eaf1ff;border-radius:7px;padding:5px 12px;font-size:12px;cursor:pointer;font-weight:600;white-space:nowrap}
+  .infoBtn:hover{background:#ffffff33}
+  /* modal */
+  .modal-bg{position:fixed;inset:0;background:#000b;display:none;align-items:center;justify-content:center;z-index:100;backdrop-filter:blur(2px)}
+  .modal-bg.show{display:flex}
+  .modal{background:#101922;border:1px solid #243347;border-radius:14px;max-width:530px;width:92%;padding:24px 26px;position:relative;box-shadow:0 24px 70px #000c;max-height:90vh;overflow:auto}
+  .modal h2{margin:0 14px 16px 0;font-size:18px;color:#eef3ff;font-weight:700;line-height:1.35}
+  .modal h2 .hl{color:#5b9bff}
+  .modal p{font-size:13px;line-height:1.65;color:#b9c6e6;margin:0 0 13px}
+  .modal p b{color:#e8edf7}
+  .modal-x{position:absolute;top:12px;right:14px;background:none;border:none;color:#8fa3cc;font-size:22px;cursor:pointer;line-height:1}
+  .modal-x:hover{color:#fff}
+  .modal-warn{background:#1b2740;border-left:3px solid var(--warn);border-radius:6px;padding:12px 14px;font-size:12px;line-height:1.6;color:#d6c08c;margin:6px 0 18px}
+  .modal-dev{border-top:1px solid #2b3550;padding-top:13px;font-size:12.5px;color:#7f9bd4;line-height:1.6}
+  .modal-dev .lbl{color:#e8edf7;font-weight:700;margin-bottom:3px}
+  .modal-foot{margin-top:11px;font-size:11px;color:#6f7ea3}
+</style>
+</head>
+<body>
+<header>
+  <h1>Painel de Viabilidade Econômica em Belo Horizonte <span class="sub">— Envelopes construtivos e OUS Somos Centro</span></h1>
+  <button id="infoBtn" class="infoBtn" title="Sobre esta ferramenta">&#9432; Sobre</button>
+</header>
+<div class="wrap">
+  <!-- ============ INPUTS ============ -->
+  <div class="left" id="inputs">
+    <div class="modeSel">
+      <button class="mode active" data-mode="lei">Lei 11.181/2019</button>
+      <button class="mode" data-mode="ous">OUS Somos Centro</button>
+    </div>
+    <div class="sec"><h3>Lote &amp; Via</h3><div class="body">
+      <div class="row"><label>Testada (m)</label><input id="testada" type="number" step="0.5" value="12"></div>
+      <div class="row"><label>Profundidade (m)</label><input id="profund" type="number" step="0.5" value="30"></div>
+      <div class="row calc"><label>Área do lote – AT (m²)</label><input id="area" readonly></div>
+      <div class="row"><label>Classificação viária</label>
+        <select id="viaClass">
+          <option value="0">Prolongamento do passeio / fachada ativa</option>
+          <option value="3" selected>Via Local</option>
+          <option value="3b">Via Coletora</option>
+          <option value="4">Via Arterial</option>
+          <option value="4b">Via de Ligação Regional</option>
+          <option value="custom">Personalizado</option>
+        </select></div>
+      <div class="row"><label>Afastamento frontal (m)</label><input id="afFrontal" type="number" step="0.5" value="3"></div>
+      <div class="row"><label>Taxa de ocupação – TO (%)</label><input id="TO" type="number" step="1" value="80"></div>
+    </div></div>
+
+    <div class="sec"><h3>Envelope (afastamentos)</h3><div class="body">
+      <div class="row"><label>Pé-direito por pavimento (m)</label><input id="peDir" type="number" step="0.1" value="3"></div>
+      <div class="row" id="rowRegime"><label>Regime lateral/fundo</label>
+        <select id="regime">
+          <option value="H">Regra do H (progressivo)</option>
+          <option value="meiaTO">Mínimo até ½ TO (torre esbelta)</option>
+        </select></div>
+      <div class="hint">Regra do H (Lei 11.181/19): ≤8 m → 1,50 m · 8–12 m → 2,30 m · &gt;12 m → 1,50 + (H−5,30)/B</div>
+      <div class="row"><label>Af. mín. (≤8 m) A₀</label><input id="A0" type="number" step="0.1" value="1.5"></div>
+      <div class="row"><label>Af. (8–12 m) A₁</label><input id="A1" type="number" step="0.1" value="2.3"></div>
+      <div class="row"><label>Coeficiente B (Regra do H)</label><input id="Bh" type="number" step="1" value="6"></div>
+      <div class="row"><label>Larg./prof. mín. do pavimento (m)</label><input id="dmin" type="number" step="0.5" value="4"></div>
+      <div class="row"><label>Máx. de pavimentos (teto)</label><input id="maxFloors" type="number" step="1" value="60"></div>
+    </div></div>
+
+    <div class="sec"><h3>Zoneamento &amp; Cenário</h3><div class="body">
+      <div class="row"><label>Zoneamento</label>
+        <select id="zona"></select></div>
+      <div class="row"><label>É centralidade local?</label><select id="centr"><option>Não</option><option>Sim</option></select></div>
+      <div class="row calc"><label>CA aplicável (limite)</label><input id="caApl" readonly></div>
+      <div class="row" id="rowCenario"><label>Cenário OUS</label>
+        <select id="cenario">
+          <option>Não adere</option><option selected>OUS – Subárea 1A</option>
+          <option>OUS – Subárea 1B</option><option>OUS – Área 2</option><option>Fora do perímetro</option>
+        </select></div>
+      <div class="row" id="rowPrazo"><label>Prazo do protocolo</label>
+        <select id="prazo"><option>Até 2 anos</option><option>Após 2 e até 4 anos</option><option>Após 4 e até 6 anos</option></select></div>
+      <div class="row" id="rowTipo"><label>Empreendimento (Anexo III)</label><select id="tipo"></select></div>
+      <div class="row" id="rowSupUR"><label>% superação via UR (0–70%)</label><input id="supUR" type="number" step="0.05" value="0"></div>
+      <div class="row"><label>Limite altimétrico – CINDACTA (m, 0=sem limite)</label><input id="altMax" type="number" step="1" value="0"></div>
+      <div class="row" id="rowPctCom"><label>% comercial da área vendável</label><input id="pctCom" type="number" step="0.05" value="0" readonly style="color:var(--accent2);background:#0c1626;border-color:#1d3a44;font-weight:600"></div>
+    </div></div>
+
+    <div class="sec"><h3>Financeiro</h3><div class="body">
+      <div class="row"><label>V – valor m² terreno (R$/m²)</label><input id="V" type="number" step="100" value="6500"></div>
+      <div class="row"><label>% permuta do terreno</label><input id="permuta" type="number" step="0.05" value="0"></div>
+      <div class="row"><label>CUB Residencial (R$/m²)</label><input id="cubR" type="number" step="10" value="2468.16"></div>
+      <div class="row"><label>CUB Comercial (R$/m²)</label><input id="cubC" type="number" step="10" value="2946.4"></div>
+      <div class="row"><label>BDI (%)</label><input id="BDI" type="number" step="0.01" value="0.25"></div>
+      <div class="row"><label>Preço apto (R$/m² privativo)</label><input id="pApto" type="number" step="100" value="12000"></div>
+      <div class="row"><label>Preço comercial (R$/m²)</label><input id="pCom" type="number" step="100" value="10000"></div>
+      <div class="row"><label>ODC à vista (−30%)?</label><select id="odcDesc"><option>Sim</option><option>Não</option></select></div>
+    </div></div>
+
+    <div class="sec"><h3>Custos &amp; contrapartidas (avançado)</h3><div class="body">
+      <div class="row"><label>Projetos (% obra)</label><input id="pProj" type="number" step="0.01" value="0.04"></div>
+      <div class="row"><label>Administração (% obra)</label><input id="pAdm" type="number" step="0.01" value="0.08"></div>
+      <div class="row"><label>Comercialização (% VGV)</label><input id="pComm" type="number" step="0.01" value="0.05"></div>
+      <div class="row"><label>Marketing (% VGV)</label><input id="pMkt" type="number" step="0.01" value="0.02"></div>
+      <div class="row"><label>Impostos (% VGV)</label><input id="pImp" type="number" step="0.01" value="0.04"></div>
+      <div class="row"><label>% TDC (da diferença CAbas→CA)</label><input id="pTDC" type="number" step="0.05" value="0.1"></div>
+      <div class="row"><label>Preço UTDC (R$/m²)</label><input id="precoUTDC" type="number" step="10" value="250"></div>
+      <div class="row" id="rowVUR"><label>Valor-base UR (R$/UR)</label><input id="vUR" type="number" step="10" value="250"></div>
+      <div class="row" id="rowFundo"><label>% Fundo na UR</label><input id="pFundo" type="number" step="0.01" value="0.15"></div>
+      <div class="row" id="rowAMIS"><label>% AMIS (do valor do terreno)</label><input id="pAMIS" type="number" step="0.05" value="0.5"></div>
+      <div class="row"><label>ITBI (%)</label><input id="pITBI" type="number" step="0.005" value="0.03"></div>
+      <div class="row"><label>% fachada ativa (do terreno)</label><input id="faPct" type="number" step="0.05" value="0.8"></div>
+    </div></div>
+  </div>
+
+  <!-- ============ OUTPUT ============ -->
+  <div class="right">
+    <div class="kpis" id="kpis"></div>
+    <div class="grid2">
+      <div class="viz">
+        <canvas id="cv" width="900" height="560"></canvas>
+        <div class="ctrls">
+          <span style="font-size:10px;color:#9fb0d6">girar</span>
+          <input id="rot" type="range" min="-90" max="90" value="22">
+          <span style="font-size:10px;color:#9fb0d6">zoom</span>
+          <input id="zoom" type="range" min="50" max="160" value="100">
+        </div>
+        <div class="leg" id="leg"></div>
+      </div>
+      <div class="panelR">
+        <h3>Resultado econômico (cenário ativo)</h3>
+        <table class="fin" id="fin"></table>
+        <div class="floors" id="floorsBox"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal-bg">
+  <div class="modal">
+    <button class="modal-x" id="modalX">&times;</button>
+    <h2>OUS Somos Centro — <span class="hl">Visualizador de Envelopes Construtivos</span></h2>
+    <p>Esta plataforma tem caráter <b>experimental e didático</b>, desenvolvida como instrumento de apoio à análise urbanística no contexto do Projeto de Lei nº 574/2025 (OUS Somos Centro), em tramitação na Câmara Municipal de Belo Horizonte.</p>
+    <p>O visualizador permite estimar envelopes construtivos tridimensionais, potenciais de aproveitamento e fluxos de Unidades de Regeneração (UR) para lotes do Cadastro Técnico Municipal (CTM), com base nos parâmetros urbanísticos da Lei Municipal nº 11.181/2019 e nas disposições previstas no substitutivo ao PL 574/2025.</p>
+    <div class="modal-warn">&#9888; As informações aqui apresentadas são estimativas geradas automaticamente a partir de dados cadastrais e não substituem a análise técnica oficial. A Prefeitura de Belo Horizonte não se responsabiliza por divergências entre os resultados desta ferramenta e as manifestações dos órgãos competentes em processos de licenciamento urbanístico.</div>
+    <div class="modal-dev">
+      <div class="lbl">Desenvolvimento</div>
+      Eduardo Barbosa<br>Gerente de Estudos Econômicos<br>DIPA | SUPLAN | SMPU | Prefeitura de Belo Horizonte
+    </div>
+    <div class="modal-foot">Dados: CTM / Prodabel · Zoneamento: Lei 11.181/2019 · Referência legislativa: PL 574/2025</div>
+  </div>
+</div>
+
+<script>
+// ============ TABELAS (Referências da planilha) ============
+const ZONES = {
+  // zona:[CAbas,CAmax,CAcent]  (0 = não se aplica)
+  "OM-1":[1.0,1.2,1.5],"OM-2":[1.0,1.3,1.6],"OM-3":[1.0,1.5,2.0],"OM-4":[1.0,0,1.2],
+  "OP-1":[1.0,2.0,2.4],"OP-2":[1.0,3.5,3.6],"OP-3":[1.0,5.0,0],
+  "Centralidade Regional":[1.0,0,5.0],"Agee":[1.0,4.0,4.0],"Aeis-1":[1.7,2.5,2.8],"PA-3":[0.8,1.0,1.0]
+};
+const TIPOS = ["1 - Retrofit e reconversão","2 - Empreendimento de interesse social","3 - Finalização de obra abandonada",
+  "4 - Substituição de estacionamento subutilizado","5 - Substituição de galpão subutilizado",
+  "6 - Edificação em Subárea 1B","7 - Substituição de edificação horizontal"];
+// Anexo III — FR [≤2, 2-4, 4-6]
+const FR = {0:[1.0,0.8,0.6],1:[1.0,1.0,1.0],2:[0.5,0.4,0.3],3:[0.5,0.4,0.3],4:[0.5,0.4,0.3],5:[0.6,0.6,0.6],6:[0.5,0.4,0.3]};
+// Anexo V — isenção ODC [Área1/Área2][≤2,2-4,4-6]
+const ANEXOV = {1:[0.75,0.5,0.0],2:[0.5,0.25,0.0]};
+const PRAZO_IDX = {"Até 2 anos":0,"Após 2 e até 4 anos":1,"Após 4 e até 6 anos":2};
+const VIA = {"0":0,"3":3,"3b":3,"4":4,"4b":4};
+
+// preencher selects
+const zSel=document.getElementById('zona');
+Object.keys(ZONES).forEach(z=>{const o=document.createElement('option');o.textContent=z;if(z==="OP-3")o.selected=true;zSel.appendChild(o);});
+const tSel=document.getElementById('tipo');
+TIPOS.forEach((t,i)=>{const o=document.createElement('option');o.value=i;o.textContent=t;if(i===3)o.selected=true;tSel.appendChild(o);});
+
+const $=id=>document.getElementById(id);
+const num=id=>parseFloat($(id).value)||0;
+const fmtR=v=>(v<0?'−':'')+'R$ '+Math.abs(Math.round(v)).toLocaleString('pt-BR');
+const fmtM=v=>v.toLocaleString('pt-BR',{maximumFractionDigits:0})+' m²';
+const fmtP=v=>(v*100).toLocaleString('pt-BR',{maximumFractionDigits:1})+'%';
+
+// ============ GEOMETRIA (bolo de noiva) ============
+function regraH(H,A0,A1,B){
+  if(H<=8) return A0;
+  if(H<=12) return A1;
+  return Math.max(A1, 1.5 + (H-5.30)/B);
+}
+function computeStack(p){
+  const Alote=p.testada*p.profund, TOarea=p.TO*Alote;
+  const floors=[];
+  let grossMax;
+  if(p.adere) grossMax = p.caApl*(1+p.supUR)*Alote*p.fBruta;
+  else        grossMax = p.caApl*Alote*1.35;
+  const altLim = (p.altMax>0) ? p.altMax : Infinity;
+  let grossAcc=0;
+  // meiaTO: rastreia o afastamento lateral do último pavimento da base (não muda na torre)
+  let towerPhase=false, towerLat=p.A0;
+  for(let k=0;k<p.maxFloors;k++){
+    const H=(k+1)*p.peDir;
+    if(H>altLim) break;
+    let lat, cap;
+    if(p.regime==="meiaTO"){
+      if(!towerPhase){
+        // fase base: segue Regra do H completa
+        lat = regraH(H,p.A0,p.A1,p.Bh);
+        const w=p.testada-2*lat, d=Math.min(p.profund-p.afFrontal-lat, TOarea/Math.max(w,0.01));
+        const a=Math.max(0,w)*Math.max(0,d);
+        if(a<=0.5*TOarea){
+          // este pavimento é o primeiro da torre — congela o af. lateral
+          towerLat=lat; towerPhase=true;
+        }
+      }
+      lat  = towerPhase ? towerLat : regraH(H,p.A0,p.A1,p.Bh);
+      cap  = towerPhase ? 0.5*TOarea : TOarea;
+    } else {
+      lat = regraH(H,p.A0,p.A1,p.Bh);
+      cap = TOarea;
+    }
+    const rear=lat;
+    let width=p.testada-2*lat;
+    let maxdepth=p.profund-p.afFrontal-rear;
+    if(width<p.dmin||maxdepth<p.dmin) break;
+    let depth=maxdepth, area=width*depth;
+    if(area>cap){depth=cap/width; area=cap;}
+    if(area<p.dmin*p.dmin) break;
+    // teto de CA
+    if(grossAcc+area>grossMax){
+      const rem=grossMax-grossAcc;
+      if(rem<p.dmin*p.dmin*0.4) break;
+      // último pavimento: mantém af. lateral, ajusta só profundidade
+      depth=rem/width; area=rem;
+      floors.push({k,H,z0:k*p.peDir,z1:H,lat,front:p.afFrontal,rear,width,depth,area,capCA:true});
+      grossAcc+=area; break;
+    }
+    floors.push({k,H,z0:k*p.peDir,z1:H,lat,front:p.afFrontal,rear,width,depth,area});
+    grossAcc+=area;
+  }
+  const bindingCA=floors.length&&floors[floors.length-1].capCA;
+  const bindingAlt=floors.length&&floors[floors.length-1].H+p.peDir>altLim&&altLim<Infinity;
+  return {floors,gross:grossAcc,Alote,TOarea,bindingCA,bindingAlt};
+}
+
+// ============ FINANCEIRO (lógica da planilha v2) ============
+function compute(){
+  const p={};
+  p.testada=num('testada'); p.profund=num('profund');
+  $('area').value=(p.testada*p.profund).toLocaleString('pt-BR',{maximumFractionDigits:1});
+  p.TO=num('TO')/100; p.afFrontal=num('afFrontal'); p.peDir=num('peDir');
+  p.regime=$('regime').value; p.A0=num('A0'); p.A1=num('A1'); p.Bh=num('Bh');
+  p.dmin=num('dmin'); p.maxFloors=Math.round(num('maxFloors'));
+  p.altMax=num('altMax');                           // (8) limite altimétrico
+  p.zona=$('zona').value; const z=ZONES[p.zona];
+  const centr=$('centr').value==="Sim";
+  const CAbas=z[0],CAmax=z[1],CAcent=z[2];
+  p.caApl = centr ? (CAcent>0?CAcent:CAmax) : (CAmax>0?CAmax:CAcent);
+  $('caApl').value=p.caApl.toFixed(2);
+  const emOp3cr = (p.zona==="OP-3"||p.zona==="Centralidade Regional");
+  const cen=$('cenario').value;
+  p.adere = cen!=="Não adere";
+  const areaNum = (cen==="OUS – Área 2"||cen==="Fora do perímetro")?2:(p.adere?1:0);
+  const fora = cen==="Fora do perímetro";
+
+  // (5) cap do supUR conforme cenário e zona
+  const maxSupUR = cen==="Não adere" ? 0
+    : fora ? (emOp3cr?0.20:0.10)
+    : 0.70;                                         // Subáreas 1A/1B/Área 2
+  const rawSupUR = p.adere ? num('supUR') : 0;
+  p.supUR = Math.min(rawSupUR, maxSupUR);
+  // atualiza o campo visualmente se necessário
+  if(rawSupUR!==p.supUR) $('supUR').value=p.supUR;
+  $('supUR').max=maxSupUR;
+
+  p.fBruta=1.7;
+  p.faPct=num('faPct');
+
+  // ---- geometria ----
+  const G=computeStack(p);
+
+  // ---- áreas (lógica da planilha v2) ----
+  // gross = área bruta real da geometria (= área de custo de construção)
+  const gross=G.gross, Alote=G.Alote;
+  const fatorVend=(p.zona==="Aeis-1")?1:1.35;
+  const fachada = emOp3cr ? p.faPct*Alote : 0;   // fachada ativa (térreo comercial, não computa CA)
+
+  let base, vendCom, vendResid, caPrat, constr;
+  if(p.adere){
+    // Adere: bruta = AL×1,7  →  AL = gross/1,7  →  CA praticado = AL/AT
+    base    = gross / p.fBruta;                   // área líquida AL
+    caPrat  = base / Alote;
+    vendCom = fachada;
+    // vendável resid = bruta/1,35 − comercial  (D9 da planilha)
+    vendResid = Math.max(0, gross/fatorVend - vendCom);
+    constr  = gross;
+  } else {
+    // Não adere: base (privativa) = CA×AT  →  bruta = privativa×1,35 + fachada
+    // CA praticado vem da geometria: caPrat = gross/(1,35×AT)  (antes de somar fachada)
+    // A fachada ativa não é computável — bruta de cálculo de CA = gross - fachada
+    const grossSemFA = gross - fachada;           // área que computa (sem fachada ativa)
+    caPrat   = grossSemFA / (fatorVend * Alote);  // CA praticado
+    base     = caPrat * Alote;                    // privativa = CA×AT
+    vendResid = base;                             // C9: privativa = vendável resid
+    vendCom   = fachada;                          // C10: fachada ativa = vendável comercial
+    constr    = gross;                            // C11: bruta total (inclui fachada)
+  }
+
+  // (3) pctCom: para OP-3/CR calcula automaticamente; caso contrário manual
+  if(emOp3cr){
+    const pctAuto = (vendResid+vendCom)>0 ? vendCom/(vendResid+vendCom)*100 : 0;
+    $('pctCom').value=pctAuto.toFixed(1);
+    $('pctCom').readOnly=true;
+  } else {
+    $('pctCom').readOnly=false;
+    const pctComManual=num('pctCom')/100;
+    if(pctComManual>0){
+      const tot=vendResid+vendCom;
+      vendCom=tot*pctComManual; vendResid=tot-vendCom;
+    }
+  }
+
+  // ---- contrapartidas ----
+  const V=num('V'), AT=Alote, valTer=AT*V;
+  const caOnerosa = Math.max(0, Math.min(caPrat,p.caApl) - CAbas);
+  const onerav = caOnerosa*AT;
+  const pTDC=num('pTDC'); const tdcArea=pTDC*onerav;
+  const pAFP = (areaNum===1)?0.2:0;
+  const isenta = p.adere ? AT*(pAFP+(emOp3cr?p.faPct:0)) : AT*pAFP;
+  const odcArea=Math.max(0,Math.min(0.9*onerav, onerav-tdcArea-isenta));
+  const VL = emOp3cr?0.25:0.5;
+  const odcCheia=VL*odcArea*V;
+  const prazoI=PRAZO_IDX[$('prazo').value];
+  const isencao = (p.adere && !fora && ANEXOV[areaNum]) ? ANEXOV[areaNum][prazoI] : 0;
+  const descV = $('odcDesc').value==="Sim";
+  const odc = p.adere ? odcCheia*(1-isencao)*(descV?0.7:1) : odcCheia*(descV?0.7:1);
+  const tdc = (tdcArea*V/1000)*num('precoUTDC');
+  const FRv = FR[+$('tipo').value][prazoI];
+  const AGT = p.adere ? (p.caApl*AT)*FRv : 0;
+  const vUR=num('vUR');
+  const urRec = (areaNum===1) ? (AGT*V/1000)*vUR : 0;
+  const caSuper = Math.max(0, Math.min(caPrat, p.caApl*(1+p.supUR)) - p.caApl);
+  const AER = caSuper*AT;
+  const urDesp = (areaNum===2) ? (AER*V/1000)*vUR*(1+num('pFundo')) : 0;
+  // (6) AMIS: regras por cenário
+  let usarAMIS;
+  if(cen==="Não adere"){
+    usarAMIS=false;
+  } else if(fora){
+    const limFora = emOp3cr ? 0.5*0.2 : 0.5*0.1;
+    usarAMIS = p.supUR < limFora;
+  } else {
+    // Subáreas 1A/1B/Área 2
+    usarAMIS = p.supUR < 0.3*0.7;
+  }
+  const amis = (p.adere && usarAMIS) ? num('pAMIS')*V*AT : 0;
+  const isentoITBI = (areaNum===1);
+  const pITBI=num('pITBI');
+  const itbi = p.adere ? (isentoITBI?0:pITBI*valTer) : pITBI*valTer;
+
+  // ---- orçamento ----
+  const BDI=num('BDI');
+  const cObraR=(constr-vendCom)*num('cubR')*(1+BDI);
+  const cObraC=vendCom*num('cubC')*(1+BDI);
+  const cObra=cObraR+cObraC;
+  const vgvR=vendResid*num('pApto'), vgvC=vendCom*num('pCom');
+  const vgvBruto=vgvR+vgvC;
+  const permuta=num('permuta');
+  const vgvDisp=vgvBruto - permuta*valTer;
+  const cTer=valTer*(1-permuta);
+  const cProj=num('pProj')*cObra, cAdm=num('pAdm')*cObra;
+  const cComm=num('pComm')*vgvDisp, cMkt=num('pMkt')*vgvDisp, cImp=num('pImp')*vgvDisp;
+  const custoTot=cObra+cTer+itbi+cProj+cAdm+odc+tdc+urDesp+amis+cComm+cMkt+cImp;
+  const lucro=vgvDisp+urRec-custoTot;
+  const margem=vgvDisp?lucro/vgvDisp:0;
+  const custoM2=constr?custoTot/constr:0;
+
+  render(p,G,{gross,base,caPrat,vendResid,vendCom,constr,
+    onerav,odcArea,odc,tdc,urRec,urDesp,amis,itbi,
+    vgvR,vgvC,vgvBruto,vgvDisp,cObra,cObraR,cObraC,cTer,cProj,cAdm,cComm,cMkt,cImp,
+    custoTot,lucro,margem,custoM2,permuta,valTer,areaNum,fora,adere:p.adere,bindingCA:G.bindingCA,
+    nFloors:G.floors.length,altura:G.floors.length*p.peDir,caApl:p.caApl,emOp3cr,bindingAlt:G.bindingAlt});
+}
+
+// ============ RENDER ============
+function render(p,G,r){
+  // KPIs
+  const kpis=[
+    ['Área construída',fmtM(r.constr),''],
+    ['Área vendável',fmtM(r.vendResid+r.vendCom),''],
+    ['CA praticado',r.caPrat.toFixed(2)+' / '+r.caApl.toFixed(2),(r.caPrat>=r.caApl*0.999?'good':'warn')],
+    ['Pavimentos',r.nFloors+' · '+r.altura.toFixed(0)+' m',''],
+    ['Lucro',fmtR(r.lucro),(r.lucro>0?'good':'bad')],
+    ['Margem',fmtP(r.margem),(r.margem>=0.15?'good':(r.margem>0?'warn':'bad'))]
+  ];
+  $('kpis').innerHTML=kpis.map(k=>`<div class="kpi ${k[2]}"><div class="t">${k[0]}</div><div class="v ${k[1].length>12?'small':''}">${k[1]}</div></div>`).join('');
+
+  // tabela financeira
+  const rows=[
+    ['head','RECEITAS',''],
+    ['','Vendas residenciais',fmtR(r.vgvR)],
+    ['','Vendas comerciais / fachada ativa',fmtR(r.vgvC)],
+    ['tot','VGV disponível',fmtR(r.vgvDisp)],
+    ['','(+) Receita de UR (Área 1)',fmtR(r.urRec)],
+    ['head','CUSTOS',''],
+    ['','Construção (CUB+BDI)',fmtR(r.cObra)],
+    ['','Terreno (caixa)',fmtR(r.cTer)],
+    ['','ITBI',fmtR(r.itbi)],
+    ['','Projetos + Administração',fmtR(r.cProj+r.cAdm)],
+    ['','ODC',fmtR(r.odc)],
+    ['','TDC',fmtR(r.tdc)],
+    ['','UR – despesa (Área 2)',fmtR(r.urDesp)],
+    ['','AMIS',fmtR(r.amis)],
+    ['','Comercial. + Mkt + Impostos',fmtR(r.cComm+r.cMkt+r.cImp)],
+    ['tot','Custo total',fmtR(r.custoTot)],
+    ['head','RESULTADO',''],
+    ['res '+(r.lucro>0?'good':(r.lucro===0?'':'bad')),'Lucro do empreendimento',fmtR(r.lucro)],
+    ['','Margem sobre VGV',fmtP(r.margem)],
+    ['','Custo / m² construído',fmtR(r.custoM2)],
+  ];
+  $('fin').innerHTML=rows.map(x=>`<tr class="${x[0]}"><td>${x[1]}</td><td class="v">${x[2]}</td></tr>`).join('');
+
+  // lista de pavimentos
+  let ft='<table><tr><th>Pav</th><th>H (m)</th><th>Af. lat.</th><th>Larg.</th><th>Prof.</th><th>Área</th></tr>';
+  G.floors.forEach(f=>{ft+=`<tr><td>${f.k+1}${f.capCA?'*':''}</td><td>${f.H.toFixed(1)}</td><td>${f.lat.toFixed(2)}</td><td>${f.width.toFixed(1)}</td><td>${f.depth.toFixed(1)}</td><td>${Math.round(f.area)}</td></tr>`;});
+  ft+='</table>';
+  if(G.floors.some(f=>f.capCA)) ft+='<div class="hint">* pavimento parcial — limite de CA atingido</div>';
+  $('floorsBox').innerHTML=ft;
+
+  // legenda
+  const bindReason=r.bindingCA?'<span class="badge ca">limitado pelo CA</span>':(r.bindingAlt?'<span class="badge geo">corte altimétrico</span>':'<span class="badge geo">limitado pela geometria</span>');
+  $('leg').innerHTML=`Lote ${p.testada}×${p.profund} m · TO ${(p.TO*100).toFixed(0)}% · af. frontal ${p.afFrontal} m`+`<br>${bindReason}`;
+
+  draw(p,G);
+}
+
+// ============ DESENHO ISOMÉTRICO ============
+function draw(p,G){
+  const cv=$('cv'), ctx=cv.getContext('2d');
+  // (11) ajusta canvas ao tamanho real do elemento
+  const rect=cv.getBoundingClientRect();
+  cv.width=Math.round(rect.width*devicePixelRatio)||900;
+  cv.height=Math.round(rect.height*devicePixelRatio)||560;
+  ctx.scale(devicePixelRatio,devicePixelRatio);
+  const W=cv.width/devicePixelRatio, H=cv.height/devicePixelRatio;
+  ctx.clearRect(0,0,W,H);
+  const rot=(_rot)*Math.PI/180;      // (9) usa variável global _rot
+  const zoomF=_zoom/100;             // usa variável global _zoom
+  const T=p.testada, D=p.profund, peDir=p.peDir;
+  // projeção iso com rotação em torno de z
+  const ax=Math.PI/6;
+  const cx0=T/2, cy0=D/2;
+  function proj(x,y,z){
+    let dx=x-cx0, dy=y-cy0;
+    const xr=dx*Math.cos(rot)-dy*Math.sin(rot);
+    const yr=dx*Math.sin(rot)+dy*Math.cos(rot);
+    const sx=(xr-yr)*Math.cos(ax);
+    const sy=(xr+yr)*Math.sin(ax)-z*0.95;
+    return [sx,sy];
+  }
+  // escala automática
+  let pts=[];
+  const Hmax=Math.max(G.floors.length*peDir,6);
+  [[0,-D*0.5,0],[T,-D*0.5,0],[0,D,0],[T,D,0],[0,0,Hmax],[T,D,Hmax]].forEach(q=>pts.push(proj(...q)));
+  let minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
+  pts.forEach(q=>{minx=Math.min(minx,q[0]);maxx=Math.max(maxx,q[0]);miny=Math.min(miny,q[1]);maxy=Math.max(maxy,q[1]);});
+  const sc=Math.min(W*0.82/(maxx-minx), H*0.82/(maxy-miny))*zoomF;
+  const ox=W/2-(minx+maxx)/2*sc, oy=H/2-(miny+maxy)/2*sc;
+  const S=(x,y,z)=>{const q=proj(x,y,z);return [ox+q[0]*sc, oy+q[1]*sc];};
+  function poly(pp,fill,stroke,lw){ctx.beginPath();pp.forEach((q,i)=>{const s=S(...q);i?ctx.lineTo(s[0],s[1]):ctx.moveTo(s[0],s[1]);});ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();}}
+
+  // rua (via) à frente do lote (y<0)
+  poly([[ -T*0.15,-D*0.55,0],[T*1.15,-D*0.55,0],[T*1.15,0,0],[-T*0.15,0,0]],'#1b2434','#2b3550',1);
+  // calçada
+  poly([[0,-D*0.12,0.02],[T,-D*0.12,0.02],[T,0,0.02],[0,0,0.02]],'#26314a',null);
+  // faixa central da via
+  ctx.setLineDash([6,6]); const a=S(-T*0.1,-D*0.33,0.03),b=S(T*1.1,-D*0.33,0.03);
+  ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.strokeStyle='#48577a';ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);
+  // lote
+  poly([[0,0,0],[T,0,0],[T,D,0],[0,D,0]],'#223152','#3b4d77',1.5);
+
+  // pavimentos (de baixo p/ cima)
+  G.floors.forEach((f,i)=>{
+    const x0=f.lat, x1=T-f.lat, y0=f.front, y1=f.front+f.depth, z0=f.z0, z1=f.z1;
+    const t=i/Math.max(1,G.floors.length-1);
+    const top=`hsl(${214-t*12},45%,${62-t*14}%)`;
+    const sideL=`hsl(${214-t*12},42%,${44-t*12}%)`;
+    const sideR=`hsl(${214-t*12},40%,${36-t*12}%)`;
+    // face fundo + esquerda + frente + direita conforme visibilidade básica: desenhar todas as laterais e topo
+    poly([[x0,y0,z0],[x0,y1,z0],[x0,y1,z1],[x0,y0,z1]],sideL,'#0c1320',0.6); // lateral esq
+    poly([[x1,y0,z0],[x1,y1,z0],[x1,y1,z1],[x1,y0,z1]],sideR,'#0c1320',0.6); // lateral dir
+    poly([[x0,y1,z0],[x1,y1,z0],[x1,y1,z1],[x0,y1,z1]],sideR,'#0c1320',0.6); // fundo
+    poly([[x0,y0,z0],[x1,y0,z0],[x1,y0,z1],[x0,y0,z1]],top,'#0c1320',0.6);   // frente
+    poly([[x0,y0,z1],[x1,y0,z1],[x1,y1,z1],[x0,y1,z1]],top,'#0c1320',0.8);   // topo
+  });
+
+  // cota de testada e profundidade
+  ctx.fillStyle='#8fa3cc';ctx.font='11px Segoe UI';
+  let m1=S(T/2,-D*0.05,0); ctx.textAlign='center';ctx.fillText(p.testada+' m (testada)',m1[0],m1[1]);
+  ctx.save();let m2=S(-0.6,D/2,0);ctx.translate(m2[0],m2[1]);ctx.fillText(p.profund+' m',0,0);ctx.restore();
+}
+
+// ── variáveis de rotação/zoom (para mouse drag + scroll) ──
+let _rot=22, _zoom=100;
+$('rot').value=_rot; $('zoom').value=_zoom;
+
+// eventos de input
+document.getElementById('inputs').addEventListener('input',e=>{
+  if(e.target.id==='viaClass'){const v=$('viaClass').value;if(v!=='custom')$('afFrontal').value=VIA[v];}
+  compute();
+});
+$('rot').addEventListener('input',()=>{_rot=+$('rot').value; compute();});
+$('zoom').addEventListener('input',()=>{_zoom=+$('zoom').value; compute();});
+window.addEventListener('resize',compute);
+
+// (10) mouse drag para girar, scroll para zoom
+{
+  const cv=$('cv'); let drag=false, dx0=0, rot0=0;
+  cv.addEventListener('mousedown',e=>{drag=true; dx0=e.clientX; rot0=_rot; cv.style.cursor='grabbing';});
+  window.addEventListener('mouseup',()=>{drag=false; cv.style.cursor='grab';});
+  window.addEventListener('mousemove',e=>{
+    if(!drag) return;
+    _rot = Math.max(-90,Math.min(90, rot0+(e.clientX-dx0)*0.35));
+    $('rot').value=_rot; compute();
+  });
+  cv.addEventListener('wheel',e=>{
+    e.preventDefault();
+    _zoom = Math.max(50,Math.min(300, _zoom - e.deltaY*0.15));
+    $('zoom').value=_zoom; compute();
+  },{passive:false});
+}
+
+// ---- janela "Sobre" ----
+const modal=$('modal');
+$('infoBtn').onclick=()=>modal.classList.add('show');
+$('modalX').onclick=()=>modal.classList.remove('show');
+modal.onclick=e=>{ if(e.target===modal) modal.classList.remove('show'); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') modal.classList.remove('show'); });
+
+// ---- modo Lei 11.181/2019  x  OUS Somos Centro ----
+let lastOus="OUS – Subárea 1A";
+const OUS_ONLY=['rowCenario','rowTipo','rowSupUR','rowFundo','rowVUR','rowAMIS'];
+const ALL_HIDE=[...OUS_ONLY,'rowPrazo','rowRegime'];
+
+function updateVisibility(){
+  const lei=document.querySelector('.modeSel .mode[data-mode="lei"]').classList.contains('active');
+  const naoadere=$('cenario').value==="Não adere";
+  // reset tudo visível
+  ALL_HIDE.forEach(id=>{const el=$(id);if(el)el.style.display='flex';});
+  if(lei){
+    // (2) lei: oculta tudo OUS + prazo
+    ALL_HIDE.forEach(id=>{const el=$(id);if(el)el.style.display='none';});
+  } else if(naoadere){
+    // (4) Não adere: oculta prazo, tipo, supUR, fundo, vUR, AMIS
+    ['rowPrazo','rowTipo','rowSupUR','rowFundo','rowVUR','rowAMIS'].forEach(id=>{
+      const el=$(id);if(el)el.style.display='none';
+    });
+  }
+}
+function setMode(m){
+  document.querySelectorAll('.modeSel .mode').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));
+  const lei=(m==="lei");
+  if(lei){
+    if($('cenario').value!=="Não adere") lastOus=$('cenario').value;
+    $('cenario').value="Não adere";
+    $('regime').value="H";   // lei 11.181 só usa Regra do H
+    $('supUR').value=0;      // lei 11.181 não tem superação via UR
+  }else if($('cenario').value==="Não adere"){
+    $('cenario').value=lastOus;
+  }
+  updateVisibility(); compute();
+}
+$('cenario').addEventListener('change',()=>{updateVisibility(); compute();});
+document.querySelectorAll('.modeSel .mode').forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+updateVisibility();
+compute();
+</script>
+</body>
+</html>
